@@ -41,6 +41,11 @@ my $cmd_ptest = "crm_simulate";
 my $logident = "sap_redhat_cluster_connector";
 my $logoptions = "pid";
 my $logfacility = "LOG_USER";
+my $protocolVersion=1;
+my $haProd="RHEL HA add-on";
+my $haProdSAP="sap_redhat_cluster_connector";
+my $haProdDoc="https://access.redhat.com/solutions/963123";
+
 #
 # open syslog
 #
@@ -54,9 +59,10 @@ $0 cmd options
       where cmd could be:  
       help 
       init
-      cpa --res RES --act ACT 
-      lsr --out FILE --sid SID --ino INO | --dbhost HOST --dbtype TYPE
+      gvi --out FILE
+      cpa --res RES --act ACT --sta STA
       fra --res RES --act ACT  [ --nod NODE ]
+      lsr --out FILE --sid SID --ino INO | --dbhost HOST --dbtype TYPE
       lsn --out FILE --res RES
 ";
 }
@@ -110,7 +116,7 @@ sub initial_check() {
 
 sub fire_resource_action {
 	my ($rsc, $act, $nod) = ("", "", "");
-	($rsc, $act, $nod) = @_;
+	my ($rsc, $act, $nod) = @_;
 	my $rc=0;
         my $sysconfig = "/etc/sysconfig/sap_redhat_cluster_connector";
 	$nowstring = localtime;
@@ -349,10 +355,6 @@ sub list_sap_nodes {
 	printf "%s : lsn()\n", $nowstring;
 	# TODO: check implemented action
 	###############################################################################################
-	###############################################################################################
-	###############################################################################################
-	###############################################################################################
-	###############################################################################################
 	#
 	# 1. GET HOSTNAME WHERE FUNCTION WAS CALLED
 	#
@@ -452,6 +454,26 @@ sub list_sap_nodes {
 	return $rc;
 }
 
+sub get_version_info($)
+{
+	my ($outfile, $resource) = @_;
+	my $rc=0;
+	$nowstring = localtime;
+	printf "%s : gvi()\n", $nowstring;
+	if ( $outfile ne "" ) {
+		#HASCRIPTCO-VERS
+		##HAPROD
+		##HAPROD-SAP
+		##HAPROD-DOC
+		open OUTFILE, ">$outfile";
+		syslog("LOG_INFO", "gvi result: %s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc);
+		printf OUTFILE "%s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc;
+		close OUTFILE;
+	} else {
+		printf "%s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc;
+	}
+	return $rc;
+}
 
 #
 # "main"
@@ -492,7 +514,6 @@ if  ($cmd eq "init")  {
 	syslog("LOG_INFO", "lsr call (out=%s,sid=%s,ino=%s)", $out, $sid, $ino);
 	$return_code=list_sap_resources($out, $sid, $ino);
 	
-
  } elsif ( $cmd eq "fra" ) {
 	open($DEBUG, ">>$logident" . ".log");
 	*STDOUT=*$DEBUG;
@@ -518,6 +539,14 @@ if  ($cmd eq "init")  {
 	syslog("LOG_INFO", "lsn call (out=%s,res=%s)", $out, $res);
 	$return_code=list_sap_nodes($out, $res);
 
+ } elsif ( $cmd eq "gvi" ) {
+	open($DEBUG, ">>$logident" . ".log");
+	*STDOUT=*$DEBUG;
+	$result = GetOptions ("out=s" => \$out,
+		) &&
+	checkavail(($out)) || paramproblem();
+	syslog("LOG_INFO", "gvi call (out=%s)", $out);
+	$return_code=get_version_info($out);
 
  } else  {
 	open($DEBUG, ">>$logident" . ".log");
@@ -530,7 +559,6 @@ if  ($cmd eq "init")  {
  	paramproblem()
  }
 	
- syslog("LOG_INFO", "TEST END");
 closelog();
 exit $return_code;
 #
