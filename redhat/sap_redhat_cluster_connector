@@ -60,7 +60,7 @@ $0 cmd options
       help 
       init
       gvi --out FILE
-      cpa --res RES --act ACT --sta STA
+      cpa --res RES --act ACT
       fra --res RES --act ACT  [ --nod NODE ]
       lsr --out FILE --sid SID --ino INO | --dbhost HOST --dbtype TYPE
       lsn --out FILE --res RES
@@ -257,13 +257,13 @@ sub list_sap_resources {
 	open CRMOUT, "$cmd_cibadmin --local -Q --xpath '//primitive[\@type=\"$sra\"]' --node-path 2>/dev/null |" || die "could not open cibadmin output";
 	while (<CRMOUT>) {
 		my $line = $_;
-		if ($line =~ /primitive..id='([a-zA-Z0-9_]+)'/) {
+		if ($line =~ /primitive..id='([a-zA-Z0-9_-]+)'/) {
 			($fname) = ($1);
 		} else {
 			next;
 		}
 
-		if ( $line =~ /[group|master|clone]..id='([a-zA-Z0-9_]+)'/) {
+		if ( $line =~ /[group|master|clone]..id='([a-zA-Z0-9_-]+)'/) {
 			($fgname) = ($1);
 		}
 
@@ -271,7 +271,7 @@ sub list_sap_resources {
 			open RESOURCE1_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='$sparam']\"  2>/dev/null |" || die "could not open cibadmin output";
 			while (<RESOURCE1_OUT>) {
 				my $result = $_;
-				if ($result =~ /value="([a-zA-Z0-9_]+)"/) {
+				if ($result =~ /value="([a-zA-Z0-9_-]+)"/) {
 					my $finstance=$1;
 					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
 						$foundRes=1;
@@ -285,7 +285,7 @@ sub list_sap_resources {
 			open RESOURCE2_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='$sparam2']\"  2>/dev/null |" || die "could not open cibadmin output";
 			while (<RESOURCE2_OUT>) {
 				my $result = $_;
-				if ($result =~ /value="([a-zA-Z0-9_]+)"/) {
+				if ($result =~ /value="([a-zA-Z0-9_-]+)"/) {
 					my $finstance=$1;
 					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
 						$foundRes=1;
