@@ -28,23 +28,27 @@ use Sys::Hostname;
 use Sys::Syslog;
 use strict;
 use File::Temp qw/ tempfile tempdir /;
+use File::Basename;
 
 my $DEBUG; my $filename;
 my $nowstring;
 #
 # init some environment 
 #
-
+my $scriptname = basename($0);
 my $cmd_cibadmin = "cibadmin";
 my $cmd_crm_resource = "crm_resource";
 my $cmd_ptest = "crm_simulate";
-my $logident = "sap_redhat_cluster_connector";
+my $logident = "$scriptname";
 my $logoptions = "pid";
 my $logfacility = "LOG_USER";
-my $protocolVersion=1;
+my $protocolVersion=3;
+my $version="3.0.1";
 my $haProd="RHEL HA add-on";
-my $haProdSAP="sap_redhat_cluster_connector";
+my $haProdSAP= "$scriptname";
+my $haProdSAPCon= "$scriptname";
 my $haProdDoc="https://access.redhat.com/solutions/963123";
+my $sysconfig = "/etc/$scriptname";
 
 #
 # open syslog
