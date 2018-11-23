@@ -47,8 +47,9 @@ my $version="3.0.1";
 my $haProd="RHEL HA add-on";
 my $haProdSAP= "$scriptname";
 my $haProdSAPCon= "$scriptname";
-my $haProdDoc="https://access.redhat.com/solutions/963123";
+my $haProdDoc="https://access.redhat.com/solutions/3150081";
 my $sysconfig = "/etc/$scriptname";
+my $hacheckcmd = "/usr/share/$scriptname/run_checks";
 
 #
 # open syslog
@@ -66,6 +67,7 @@ $0 cmd options
       gvi --out FILE
       cpa --res RES --act ACT
       fra --res RES --act ACT  [ --nod NODE ]
+      hcc --out FILE --sid SID --ino INSTNO
       lsr --out FILE --sid SID --ino INO | --dbhost HOST --dbtype TYPE
       lsn --out FILE --res RES
 ";
@@ -479,6 +481,25 @@ sub get_version_info($)
 	return $rc;
 }
 
+sub ha_config_check($$$)
+{
+    # output-multiple lines, each line formatted as: CHK-STATE:CHK-CATEGORY:CHK-DESCRIPTION:CHK-COMMENT
+    #
+    my $rc=0;
+    my ($out, $sid, $ino) = @_;
+    printf "%s : hcc($out, $sid, $ino)\n", $nowstring;
+    if ( $out ne "" ) {
+        syslog("LOG_INFO", "hcc run_checks");
+        system("$hacheckcmd","$out","$sid", "$ino");
+        $rc=0;
+    } else {
+        syslog("LOG_INFO", "hcc run_checks stdout");
+        system("$hacheckcmd","$out","$sid", "$ino");
+        $rc=0;
+    }
+    return $rc;
+}
+
 #
 # "main"
 #
@@ -539,7 +560,6 @@ if  ($cmd eq "init")  {
 	                   "res=s" => \$res,
 		 ) &&
 	checkavail(($res, $out)) || paramproblem();
-	# TODO: action
 	syslog("LOG_INFO", "lsn call (out=%s,res=%s)", $out, $res);
 	$return_code=list_sap_nodes($out, $res);
 
@@ -551,6 +571,17 @@ if  ($cmd eq "init")  {
 	checkavail(($out)) || paramproblem();
 	syslog("LOG_INFO", "gvi call (out=%s)", $out);
 	$return_code=get_version_info($out);
+
+} elsif ( $cmd eq "hcc" ) {
+        open($DEBUG, ">>$logident" . ".log");
+        *STDOUT=*$DEBUG;
+        $result = GetOptions ("sid=s" => \$sid,
+                           "ino=s" => \$ino,
+                           "out=s" => \$out,
+                 ) &&
+        checkavail(($sid, $ino, $out)) || paramproblem();
+        syslog("LOG_INFO", "hcc call (out=%s)", $out);
+        $return_code=ha_config_check($out,$sid,$ino);
 
  } else  {
 	open($DEBUG, ">>$logident" . ".log");

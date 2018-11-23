@@ -1,0 +1,17 @@
+#!/bin/bash
+# HA Health Check scripts for sap-cluster-connector
+#
+# params output-file futher-params-for-checks
+#
+
+out="$1"
+shift
+
+check_dir="/usr/share/sap_suse_cluster_connector/checks"
+
+logger -t hcc "run_checks: <$@>"
+
+for check in /usr/share/sap_suse_cluster_connector/checks/??_*; do
+    logger -t hcc "run_checks: call check $check <$@>"
+    bash $check $@ >> $out
+done

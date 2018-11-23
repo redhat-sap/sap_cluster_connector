@@ -1,0 +1,24 @@
+#!/bin/bash
+# HA Health Check scripts for sap-cluster-connector
+#
+# check is_ers ra
+#
+
+logger -t hcc "$check <$@> (out=$out)"
+chkCategory="RHEL INSTALLATION"
+chkDescription="SAPInstance RA sufficient version"
+
+grep -q IS_ERS /usr/lib/ocf/resource.d/heartbeat/SAPInstance; rc=$?
+
+case "$rc" in
+    0 )
+         chkState="SUCCESS"
+         chkComment="SAPInstance includes is-ers patch"
+         ;;
+    * )
+         chkState="ERROR"
+         chkComment="SAPInstance does not include is-ers patch"
+         ;;
+esac
+
+echo "$chkState:$chkCategory:$chkDescription:$chkComment"
