@@ -11,3 +11,5 @@ https://wiki.scn.sap.com/wiki/display/SI/Important+Resources+about+the+HA-Interf
 https://wiki.scn.sap.com/wiki/display/ATopics/Manual+Page+of+sap_vendor_cluster_connector
 
 https://launchpad.support.sap.com/#/notes/1693245
+
+https://launchpad.support.sap.com/#/notes/2464065
