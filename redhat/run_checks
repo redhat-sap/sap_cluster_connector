@@ -7,11 +7,12 @@
 out="$1"
 shift
 
-check_dir="/usr/share/sap_suse_cluster_connector/checks"
+check_dir="$(cd `dirname $0` && pwd)/checks"
+#check_dir="/usr/share/sap_suse_cluster_connector/checks"
 
 logger -t hcc "run_checks: <$@>"
 
-for check in /usr/share/sap_suse_cluster_connector/checks/??_*; do
+for check in $check_dir/??_*; do
     logger -t hcc "run_checks: call check $check <$@>"
     bash $check $@ >> $out
 done
