@@ -14,6 +14,8 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
 
 [SAP Note 1693245 - SAP HA Script Connector Library](https://launchpad.support.sap.com/#/notes/1693245)
 
+[SAP Note 1822055 - Enhanced SAP HA library interface](https://launchpad.support.sap.com/#/notes/1822055)
+
 [SAP Note 2464065 - Check of automatic maintenance mode for HA solutions](https://launchpad.support.sap.com/#/notes/2464065)
 
 ## Installation
@@ -21,11 +23,24 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
   * create the directory `/usr/share/sap_cluster_connector/`
   * copy the `run_checks` script to `/usr/share/sap_cluster_connector/`
   * copy the `checks` directory and all its contents to `/usr/share/sap_cluster_connector/`
+ 
+## Cluster Configuration
+  * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation:  
+  ```
+  # pcs resource op defaults record-pending=true
+  ```
 
+  * add SIDadm user to "haclient" group on each node:  
+  ```
+  # usermod -a -G haclient rh2adm
+  ```
 ## SAP Configuration
+  * make sure that the [SAP HA Script Connector Library](https://launchpad.support.sap.com/#/notes/1693245) (saphascriptco.so) is available as part of the SAP Kernel of the SAP installation
+
   * add the following to the instance profile of each SAP instance that should be managed via the SAP HA interface (for example /sapmnt/RH2/profile/RH2_ASCS00_rh2ascs):  
   ```
   service/halib = $(DIR_CT_RUN)/saphascriptco.so
   service/halib_cluster_connector = /usr/bin/sap_redhat_cluster_connector
   ```
+
   * restart the Instance (including the sapstartsrv for that instance)
