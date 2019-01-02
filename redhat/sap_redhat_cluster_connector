@@ -515,7 +515,7 @@ my $return_code=2;
 $nod="";
 $ENV{'PATH'} = $ENV{'PATH'} . ":/usr/sbin:/sbin";
 
-if ( $cmd eq "h" || $cmd eq "help" ||  $cmd eq "--help" ) {
+if ( $cmd eq "h" || $cmd eq "help" ||  $cmd eq "-h" || $cmd eq "--help" ||  $cmd eq "-?" ) {
 	 usage();
 	 exit 0;
 }
