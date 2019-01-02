@@ -48,7 +48,7 @@ my $haProd="RHEL HA add-on";
 my $haProdSAP= "$scriptname";
 my $haProdSAPCon= "$scriptname";
 my $haProdDoc="https://access.redhat.com/solutions/3150081";
-my $sysconfig = "/etc/$scriptname";
+my $sysconfig = "/etc/sysconfig/$scriptname";
 my $hacheckcmd = "/usr/share/$scriptname/run_checks";
 
 #
@@ -124,20 +124,22 @@ sub fire_resource_action {
 	my ($rsc, $act, $nod) = ("", "", "");
 	my ($rsc, $act, $nod) = @_;
 	my $rc=0;
-        my $sysconfig = "/etc/sysconfig/sap_redhat_cluster_connector";
+	#my $sysconfig = "/etc/sysconfig/sap_redhat_cluster_connector";
 	$nowstring = localtime;
 	printf "%s : fra($rsc, $act, $nod)\n", $nowstring;
-	open SYSCONF, "<$sysconfig" or syslog("LOG_INFO", "open %s failed", $sysconfig);
-	while (<SYSCONF>) {
-		chomp;
-		my $line = $_;
-		printf "%s...\n",  $line;
-		if ($line =~ /BLOCK_RESOURCES=.*$rsc/) {
-                   syslog("LOG_INFO", "BLOCK INFO: fra call %s for resource %s blocked as defined in %s", $act, $rsc, $sysconfig);
-		   return 0;
-		}
-        }
-	close SYSCONF;
+	if (-r $sysconfig) {
+		open SYSCONF, "<$sysconfig" or syslog("LOG_INFO", "open %s failed", $sysconfig);
+		while (<SYSCONF>) {
+			chomp;
+			my $line = $_;
+			printf "%s...\n",  $line;
+			if ($line =~ /BLOCK_RESOURCES=.*$rsc/) {
+                   	syslog("LOG_INFO", "BLOCK INFO: fra call %s for resource %s blocked as defined in %s", $act, $rsc, $sysconfig);
+		   	return 0;
+			}	
+        	}
+		close SYSCONF;
+	}	
 	if ( $act eq "stop" ) {
 		syslog("LOG_INFO", "fire_resource_action stop %s\n", $rsc);
 		if (system($cmd_crm_resource,"-r",$rsc,"-m","-p","target-role","-v","Stopped")) { $rc=1; }
