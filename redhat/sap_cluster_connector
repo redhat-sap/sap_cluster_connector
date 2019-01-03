@@ -1,14 +1,21 @@
 #!/usr/bin/perl
 ############################################################################
 #
-# sap_redhat_cluster_connector
+# sap_cluster_connector
+# Authors:
+#   Fabian Herschel
+#   Frank Danapfel
+#   Andrew Beekhof
+#   David Vossel
 #
-# Author:  fabian.herschel@suse.com
-# (c) 2010 SUSE Linux Products GmbH, Nuremberg, Germany
 # License: GPLv2 or later
 #
 # based on:
 # sap_suse_cluster_connector
+# Author:  fabian.herschel@suse.com
+# (c) 2010-2014 SUSE Linux Products GmbH, Nuremberg, Germany
+# (c) 2015      SUSE Linux GmbH, Nuremberg, Germany
+#
 ############################################################################
 #
 # REMARKS:
@@ -44,10 +51,10 @@ my $logoptions = "pid";
 my $logfacility = "LOG_USER";
 my $protocolVersion=3;
 my $version="3.0.1";
-my $haProd="RHEL HA add-on";
+my $haProd="Pacemaker";
 my $haProdSAP= "$scriptname";
 my $haProdSAPCon= "$scriptname";
-my $haProdDoc="https://access.redhat.com/solutions/3150081";
+my $haProdDoc="https://github.com/ClusterLabs/sap_cluster_connector";
 my $sysconfig = "/etc/sysconfig/$scriptname";
 my $hacheckcmd = "/usr/share/$scriptname/run_checks";
 
