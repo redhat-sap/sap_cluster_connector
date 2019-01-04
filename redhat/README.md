@@ -34,6 +34,7 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
   ```
   # usermod -a -G haclient rh2adm
   ```
+
 ## SAP Configuration
   * make sure that the [SAP HA Script Connector Library](https://launchpad.support.sap.com/#/notes/1693245) (saphascriptco.so) is available as part of the SAP Kernel of the SAP installation
 
@@ -44,3 +45,44 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
   ```
 
   * restart the Instance (including the sapstartsrv for that instance)
+
+## Usage
+The cluster connector is normaly called automatically in case an action on a SAP insance is performed via the SAP management tools that requires some interaction with the cluster.
+
+To verify that the cluster connector is working correctly it is also possible to run the sap_cluster_connector script manually or to trigger its execution via `sapcontrol`.
+
+### Examples for running sap_cluster_connector directly
+Do a minor check, if the cluster framework command line interface is available:
+```
+# /usr/bin/sap_cluster_connector init
+```
+Get some basic information about the cluster product used:
+```
+#/usr/bin/sap_cluster_connector gvi
+```
+
+Look-up for the SAP instance number 02 of the SAP system C11 and return the cluster resource name:
+```
+# /usr/bin/sap_cluster_connector lsr –out /tmp/myfile00.txt –sid C11 –ino 02
+```
+Start the cluster resource rsc_sap_C11_D02:
+```
+# /usr/bin/sap_cluster_connector fra –res rsc_sap_C11_D02 –act start
+```
+Check, if the cluster action to start the SAP instance for system C11 and instance number 02 is already in progress:
+```
+# /usr/bin/sap_cluster_connector cpa –res rsc_sap_C11_D02 –act start
+```
+Look-up for the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:  
+```
+# /usr/bin/sap_cluster_connector lsn –out /tmp/myfile01.txt –res rsc_sap_C11_D02
+```
+### Examples for calling sap_cluster_connector via sapcontrol
+Perform a check of the HA configuration:
+```
+# /usr/sap/hostctrl/exe/sapcontrol -nr 29 -function HACheckConfig
+```
+Trigger the failover of a SAP instance to another cluster node:
+```
+# /usr/sap/hostctrl/exe/sapcontrol -nr 20 -function HAFailoverToNode
+```
