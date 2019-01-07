@@ -72,11 +72,11 @@ $0 cmd options
       help 
       init
       gvi --out FILE
+      hcc --out FILE --sid SID --ino INO
+      lsr --out FILE --sid SID --ino INO
+      lsn --out FILE --res RES
       cpa --res RES --act ACT
       fra --res RES --act ACT  [ --nod NODE ]
-      hcc --out FILE --sid SID --ino INSTNO
-      lsr --out FILE --sid SID --ino INO | --dbhost HOST --dbtype TYPE
-      lsn --out FILE --res RES
 ";
 }
 
@@ -100,7 +100,6 @@ sub checkavail(@) {
 
 sub initial_check() {
 	my $rc=0;
-	my $check_cmd;
 	#
 	# move old log file to *.old in cwd which is /usr/sap/<SID>/<INST>/work
 	#
@@ -116,14 +115,6 @@ sub initial_check() {
 	printf "---------------------------------------------------\n";
 	$nowstring = localtime;
 	printf "%s : init()\n", $nowstring;
-	for $check_cmd ( @all_cmds) {
-#		if ( -e "/usr/bin/$check_cmd" ) {
-#			printf "INFO: %s available", $check_cmd;
-#		} else {
-#			printf "ERR: Cluster command %s missing\n", $check_cmd;
-#			$rc=3;
-#		}
-	}
 	return $rc;
 }
 
@@ -131,7 +122,6 @@ sub fire_resource_action {
 	my ($rsc, $act, $nod) = ("", "", "");
 	my ($rsc, $act, $nod) = @_;
 	my $rc=0;
-	#my $sysconfig = "/etc/sysconfig/sap_redhat_cluster_connector";
 	$nowstring = localtime;
 	printf "%s : fra($rsc, $act, $nod)\n", $nowstring;
 	if (-r $sysconfig) {
@@ -479,10 +469,6 @@ sub get_version_info($)
 	$nowstring = localtime;
 	printf "%s : gvi()\n", $nowstring;
 	if ( $outfile ne "" ) {
-		#HASCRIPTCO-VERS
-		##HAPROD
-		##HAPROD-SAP
-		##HAPROD-DOC
 		open OUTFILE, ">$outfile";
 		syslog("LOG_INFO", "gvi result: %s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc);
 		printf OUTFILE "%s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc;
