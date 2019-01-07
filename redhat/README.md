@@ -92,3 +92,8 @@ Trigger the failover of a SAP instance to another cluster node:
 ```
 # /usr/sap/hostctrl/exe/sapcontrol -nr 20 -function HAFailoverToNode
 ```
+
+## TODO
+  * implement function to activate maintenance mode (sww)
+  * add check for record-pending option
+
