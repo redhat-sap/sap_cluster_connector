@@ -23,13 +23,12 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
   * create the directory `/usr/share/sap_cluster_connector/`
   * copy the `run_checks` script to `/usr/share/sap_cluster_connector/`
   * copy the `checks` directory and all its contents to `/usr/share/sap_cluster_connector/`
-  * make sure `/usr/bin/sap_cluster_connector`, /usr/share/sap_cluster_connector/run_checks` and all scripts in `/usr/share/sap_cluster_connector/checks/` are executable by all users:  
+  * make sure `/usr/bin/sap_cluster_connector`, `/usr/share/sap_cluster_connector/run_checks` and all scripts in `/usr/share/sap_cluster_connector/checks/` are executable by all users:  
 ```
 # chmod a+x /usr/bin/sap_cluster_connector
-# chmod a+x /usr/share/sap_cluster_conector/run_checks
+# chmod a+x /usr/share/sap_cluster_connector/run_checks
 # chmod a+x /usr/share/sap_cluster_connector/checks/*
 ```
-
  
 ## Cluster Configuration
   * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation:  
