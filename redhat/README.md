@@ -6,11 +6,11 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
 
 ## Resources
 
-[Connecting startsapsrv and cluster frameworks using the components saphascriptco.so and sap_vendor_cluster_connector](https://blogs.sap.com/2016/01/18/connecting-startsapsrv-and-cluster-frameworks-using-the-components-saphascriptcoso-and-sapvendorclusterconnector/)
-
-[Important Resources about the HA-Interface Certification for Partners](https://wiki.scn.sap.com/wiki/display/SI/Important+Resources+about+the+HA-Interface+Certification+for+Partners)
+[Using sap_vendor_cluster_connector for interaction between cluster framework and sapstartsrv](https://blogs.sap.com/2014/05/08/using-sapvendorclusterconnector-for-interaction-between-cluster-framework-and-sapstartsrv/)
 
 [Manual Page of sap_vendor_cluster_connector](https://wiki.scn.sap.com/wiki/display/ATopics/Manual+Page+of+sap_vendor_cluster_connector)
+
+[Important Resources about the HA-Interface Certification for Partners](https://wiki.scn.sap.com/wiki/display/SI/Important+Resources+about+the+HA-Interface+Certification+for+Partners)
 
 [SAP Note 1693245 - SAP HA Script Connector Library](https://launchpad.support.sap.com/#/notes/1693245)
 
