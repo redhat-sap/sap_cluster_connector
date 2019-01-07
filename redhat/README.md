@@ -31,11 +31,15 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
 ```
  
 ## Cluster Configuration
-  * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation:  
+  * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation: 
+  pcs (RHEL): 
   ```
   # pcs resource op defaults record-pending=true
   ```
-
+  crmsh (SLES):
+  ```
+  # crm configure op_defaults record-pending=true
+  ```
   * add SIDadm user to "haclient" group on each node:  
   ```
   # usermod -a -G haclient rh2adm
