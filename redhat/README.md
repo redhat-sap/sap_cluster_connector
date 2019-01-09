@@ -31,9 +31,10 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
 ```
  
 ## Cluster Configuration
-  * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation:  
+  * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation option:  
   pcs (RHEL): `# pcs resource op defaults record-pending=true`  
-  crmsh (SLES): `# crm configure op_defaults record-pending=true`
+  crmsh (SLES): `# crm configure op_defaults record-pending=true`  
+  **Note:** on pacemaker 2.x and some pacemaker 1.x versions shipped with some Linux distributions`record-pending` is already activated by default. Please check the release notes of your pacemaker version to se if this is the case or if `record-pending` needs to be activated manually.
 
   * add SIDadm user to "haclient" group on each node:  
   ```
@@ -65,7 +66,7 @@ Get some basic information about the cluster product used:
 ```
 #/usr/bin/sap_cluster_connector gvi --out /tmp/gvi.txt
 ```
-Look-up the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:  
+Look-up the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:
 ```
 # /usr/bin/sap_cluster_connector lsn --out /tmp/lsn.txt --res rsc_sap_C11_D02
 ```
@@ -80,6 +81,10 @@ Start the cluster resource rsc_sap_C11_D02:
 Check, if the cluster action to start the SAP instance for system C11 and instance number 02 is already in progress:
 ```
 # /usr/bin/sap_cluster_connector cpa --res rsc_sap_C11_D02 --act start
+```
+Move the cluster resource rsc_sap_C11_D02 to the cluster node node2:
+```
+# /usr/bin/sap_cluster_connector fra --res rsc_sap_C11_D02 --act migrate --nod node2
 ```
 ### Examples for calling sap_cluster_connector via sapcontrol
 Perform a check of the HA configuration:
