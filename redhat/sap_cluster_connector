@@ -540,12 +540,13 @@ if  ($cmd eq "init")  {
  } elsif ( $cmd eq "fra" ) {
 	open($DEBUG, ">>$logident" . ".log");
 	*STDOUT=*$DEBUG;
+	$nod = "";
 	 #
 	 # remark: don't check if nod is set - as it is optional
 	 #
 	$result = GetOptions ("res=s" => \$res,    
 	                   "act=s" => \$act,
-	                   "nod=s" => \$nod,
+	                   "node:s" => \$nod,
 		 ) && 
 	checkavail(($res, $act)) || paramproblem();
 	syslog("LOG_INFO", "fra call (res=%s,act=%s,nod=%s)", $res, $act, $nod);
