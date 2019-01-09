@@ -65,10 +65,13 @@ Get some basic information about the cluster product used:
 ```
 #/usr/bin/sap_cluster_connector gvi --out /tmp/gvi.txt
 ```
-
-Look-up for the SAP instance number 02 of the SAP system C11 and return the cluster resource name:
+Look-up the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:  
 ```
-# /usr/bin/sap_cluster_connector lsr --out /tmp/myfile00.txt --sid C11 --ino 02
+# /usr/bin/sap_cluster_connector lsn --out /tmp/lsn.txt --res rsc_sap_C11_D02
+```
+Look-up the SAP instance number 02 of the SAP system C11 and return the cluster resource name:
+```
+# /usr/bin/sap_cluster_connector lsr --out /tmp/lsr.txt --sid C11 --ino 02
 ```
 Start the cluster resource rsc_sap_C11_D02:
 ```
@@ -77,10 +80,6 @@ Start the cluster resource rsc_sap_C11_D02:
 Check, if the cluster action to start the SAP instance for system C11 and instance number 02 is already in progress:
 ```
 # /usr/bin/sap_cluster_connector cpa --res rsc_sap_C11_D02 --act start
-```
-Look-up for the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:  
-```
-# /usr/bin/sap_cluster_connector lsn --out /tmp/lsn.txt --res rsc_sap_C11_D02
 ```
 ### Examples for calling sap_cluster_connector via sapcontrol
 Perform a check of the HA configuration:
