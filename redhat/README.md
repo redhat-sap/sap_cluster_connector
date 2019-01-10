@@ -84,7 +84,7 @@ Check, if the cluster action to start the SAP instance for system C11 and instan
 ```
 Move the cluster resource rsc_sap_C11_D02 to the cluster node node2:
 ```
-# /usr/bin/sap_cluster_connector fra --res rsc_sap_C11_D02 --act migrate --nod node2
+# /usr/bin/sap_cluster_connector fra --res rsc_sap_C11_D02 --act migrate --node node2
 ```
 ### Examples for calling sap_cluster_connector via sapcontrol
 Perform a check of the HA configuration:
