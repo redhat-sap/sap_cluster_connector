@@ -148,9 +148,8 @@ sub fire_resource_action {
 		if ( defined $nod ) {
 			if (system($cmd_crm_resource,"-r",$rsc,"-M","-N",$nod,"-u","PT5M","-f") ) { $rc=1; }
 		} else {
-                        if (system($cmd_crm_resource,"-r",$rsc,"-u PT5M","-f") ) { $rc=1; }
+                        if (system($cmd_crm_resource,"-r",$rsc,"-u","PT5M","-f") ) { $rc=1; }
                 }
-		
 	}
 	syslog("LOG_INFO"," rc=%i\n", $rc);
 	return $rc;
