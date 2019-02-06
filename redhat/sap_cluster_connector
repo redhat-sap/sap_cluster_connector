@@ -77,6 +77,7 @@ $0 cmd options
       lsn --out FILE --res RES
       cpa --res RES --act ACT
       fra --res RES --act ACT  [ --node NODE ]
+      smm --out FILE --sid SID --ino INSTNO --mod NMODE
 ";
 }
 
@@ -143,10 +144,11 @@ sub fire_resource_action {
 		syslog("LOG_INFO","fire_resource_action start %s\n", $rsc);
 		if (system($cmd_crm_resource,"-r",$rsc,"-m","-d","target-role") ) { $rc=1; }
 	} elsif ( $act eq "migrate" ) {
-		syslog("LOG_INFO","fire_resource_action migrate %s %s\n", $rsc, $nod);
 		if ( (defined $nod) && !($nod eq '') ) {
+			syslog("LOG_INFO", "fire_resource_action migrate %s to node %s\n", $rsc, $nod);
 			if (system($cmd_crm_resource,"-r",$rsc,"-M","-N",$nod,"-u","PT5M","-f") ) { $rc=1; }
 		} else {
+			syslog("LOG_INFO", "fire_resource_action migrate %s\n", $rsc);
                         if (system($cmd_crm_resource,"-r",$rsc,"-M","-u","PT5M","-f") ) { $rc=1; }
                 }
 	}
@@ -206,8 +208,8 @@ sub check_pending_action {
                 my $line = $_;
                 printf "%s", $line;
 		if ( (${act} eq "stop") && ( $line =~ "Stopped" )) {
-			$rc=0;
 			syslog("LOG_INFO","target-role stopped for resource %s found", ${res});
+			$rc=0;
 		}
 		if ( (${act} eq "start") && ( $line =~ "Started" )) {
 			syslog("LOG_INFO","target-role started for resource %s found", ${res});
@@ -483,17 +485,46 @@ sub ha_config_check($$$)
     #
     my $rc=0;
     my ($out, $sid, $ino) = @_;
+    $nowstring = localtime;
     printf "%s : hcc($out, $sid, $ino)\n", $nowstring;
     if ( $out ne "" ) {
         syslog("LOG_INFO", "hcc run_checks");
-        system("$hacheckcmd","$out","$sid", "$ino");
-        $rc=0;
+        if (system("$hacheckcmd","$out","$sid", "$ino") ) { $rc=1; }
     } else {
         syslog("LOG_INFO", "hcc run_checks stdout");
-        system("$hacheckcmd","$out","$sid", "$ino");
+        if (system("$hacheckcmd","$out","$sid", "$ino") ) { $rc=1; }
         $rc=0;
     }
     return $rc;
+}
+
+sub set_maintenance_mode
+{
+	my $rc=0;
+	my $mm=0;
+	my ($out, $sid, $ino, $nmode) = @_;
+	$nowstring = localtime;
+	printf "%s : smm($out, $sid, $ino, $nmode)\n", $nowstring;
+
+	if ( $out ne "" ) {
+		open OUTFILE, ">$out";
+		printf OUTFILE "%s\n", $mm ;
+		close OUTFILE;
+	} else {
+		printf "DEBUG-MODE $mm\n" ;
+	}
+	if ( $nmode eq "1" ) {
+		syslog("LOG_INFO", "Activate maintenance mode for resource %s\n",$res);
+		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=maintenance", "--parameter-value", "true") ) { $rc=1; }
+	} elsif ( $nmode eq "0" ) {
+		syslog("LOG_INFO", "Deactivate maintenance mode for resource %s\n",$res);
+		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=maintenance", "--parameter-value", "false") ) { $rc=1; }
+	} else {
+		syslog("LOG_INFO", "Check maintenance mode for resource %s\n",$res);
+		$rc=0;
+	}
+	printf "set_maintenance_mode: rc=%s\n", $rc;
+	return $rc;
 }
 
 #
@@ -580,7 +611,19 @@ if  ($cmd eq "init")  {
         syslog("LOG_INFO", "hcc call (out=%s)", $out);
         $return_code=ha_config_check($out,$sid,$ino);
 
- } else  {
+} elsif ( $cmd eq "smm" ) {
+        open($DEBUG, ">>$logident" . ".log");
+        *STDOUT=*$DEBUG;
+        $result = GetOptions ("sid=s" => \$sid,    
+                           "ino=s" => \$ino,
+                           "out=s" => \$out,
+                           "mod=s" => \$nmode,
+                 ) &&
+        checkavail(($sid, $ino, $out)) || paramproblem();
+        syslog("LOG_INFO", "smm call (out=%s)", $out);
+        $return_code=set_maintenance_mode($out, $sid, $ino, $nmode);
+
+} else  {
 	open($DEBUG, ">>$logident" . ".log");
 	*STDOUT=*$DEBUG;
 	 #
