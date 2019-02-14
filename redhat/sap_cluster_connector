@@ -228,6 +228,77 @@ sub check_pending_action {
 	return $rc;
 }
 
+sub get_resource_from_sid_ino {
+	#
+	# --sid sid --ino ino
+	#
+	my ($sid, $ino) = @_;
+	my $rc=2;
+	$nowstring = localtime;
+	printf "%s : get_resource_from_sid_ino()\n", $nowstring;
+
+	my ($sclass, $sprovider, $sra, $sparam, $sparam2 ) = ("ocf", "heartbeat", "SAPInstance", "InstanceName", "ERS_InstanceName");
+
+	$ENV{'PATH'} = $ENV{'PATH'} . ":/usr/sbin:/sbin";
+
+	my ($fclass, $fprovider, $fra, $fname, $fgname) = ("","","","","");
+	my $foundRes = 0; # found correct Resource
+
+	open CRMOUT, "$cmd_cibadmin --local -Q --xpath '//primitive[\@type=\"$sra\"]' --node-path 2>/dev/null |" || die "could not open cibadmin output";
+	while (<CRMOUT>) {
+		my $line = $_;
+		if ($line =~ /primitive..id='([a-zA-Z0-9_-]+)'/) {
+			($fname) = ($1);
+		} else {
+			next;
+		}
+
+		if ( $line =~ /[group|master|clone]..id='([a-zA-Z0-9_-]+)'/) {
+			($fgname) = ($1);
+		}
+		# Check for InstanceName
+		if ($foundRes==0) {
+			open RESOURCE1_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='$sparam']\"  2>/dev/null |" || die "could not open cibadmin output";
+			while (<RESOURCE1_OUT>) {
+				my $result = $_;
+				if ($result =~ /value="([a-zA-Z0-9_-]+)"/) {
+					my $finstance=$1;
+					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
+						$foundRes=1;
+					    syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam, $finstance);
+					}
+				}
+			}
+		}
+		# Check for ERS_InstanceName
+		if ($foundRes==0) {
+			open RESOURCE2_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='$sparam2']\"  2>/dev/null |" || die "could not open cibadmin output";
+			while (<RESOURCE2_OUT>) {
+				my $result = $_;
+				if ($result =~ /value="([a-zA-Z0-9_-]+)"/) {
+					my $finstance=$1;
+					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
+						$foundRes=1;
+					    syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam2, $finstance);
+					}
+				}
+			}
+		}
+
+		if ($foundRes == 1) {
+			last;
+		}
+	}
+
+	if ($foundRes==1) {
+		return $fname;
+	} else {
+		syslog("LOG_INFO","get_resource_from_sid_ino result: empty\n");
+		return 1;
+	}
+
+}
+
 sub list_sap_resources {
 	#
 	# --out file --sid sid --ino ino
@@ -479,8 +550,7 @@ sub get_version_info($)
 	return $rc;
 }
 
-sub ha_config_check($$$)
-{
+sub ha_config_check($$$) {
     # output-multiple lines, each line formatted as: CHK-STATE:CHK-CATEGORY:CHK-DESCRIPTION:CHK-COMMENT
     #
     my $rc=0;
@@ -498,13 +568,15 @@ sub ha_config_check($$$)
     return $rc;
 }
 
-sub set_maintenance_mode
-{
+sub set_maintenance_mode {
 	my $rc=0;
 	my $mm=0;
 	my ($out, $sid, $ino, $nmode) = @_;
+	my $res;
 	$nowstring = localtime;
 	printf "%s : smm($out, $sid, $ino, $nmode)\n", $nowstring;
+
+	$res=get_resource_from_sid_ino($sid, $ino);
 
 	if ( $out ne "" ) {
 		open OUTFILE, ">$out";
