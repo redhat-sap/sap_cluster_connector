@@ -533,8 +533,7 @@ sub list_sap_nodes {
 	return $rc;
 }
 
-sub get_version_info($)
-{
+sub get_version_info {
 	my ($outfile, $resource) = @_;
 	my $rc=0;
 	$nowstring = localtime;
@@ -550,7 +549,7 @@ sub get_version_info($)
 	return $rc;
 }
 
-sub ha_config_check($$$) {
+sub ha_config_check {
     # output-multiple lines, each line formatted as: CHK-STATE:CHK-CATEGORY:CHK-DESCRIPTION:CHK-COMMENT
     #
     my $rc=0;
@@ -604,7 +603,7 @@ sub set_maintenance_mode {
 #
 my ($cmd) = @ARGV; shift;
 my $result=2;
-my ($sid, $ino, $act, $out, $res, $nod, $sta);
+my ($sid, $ino, $act, $out, $res, $nod, $sta, $nmode);
 my $return_code=2;
 $nod="";
 $ENV{'PATH'} = $ENV{'PATH'} . ":/usr/sbin:/sbin";
@@ -689,7 +688,7 @@ if  ($cmd eq "init")  {
         $result = GetOptions ("sid=s" => \$sid,    
                            "ino=s" => \$ino,
                            "out=s" => \$out,
-                           "mod=s" => \$nmode,
+                           "mod:s" => \$nmode,
                  ) &&
         checkavail(($sid, $ino, $out)) || paramproblem();
         syslog("LOG_INFO", "smm call (out=%s)", $out);
@@ -708,5 +707,3 @@ if  ($cmd eq "init")  {
 	
 closelog();
 exit $return_code;
-#
-#################################################################
