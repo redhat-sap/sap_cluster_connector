@@ -98,5 +98,7 @@ Trigger the failover of a SAP instance to another cluster node:
 
 ## TODO
   * implement function to activate maintenance mode (sww)
+  * add functionality to also read information about HA product from config file
   * add check for record-pending option
+  * code cleanup
 
