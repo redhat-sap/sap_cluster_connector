@@ -49,14 +49,22 @@ my $cmd_ptest = "crm_simulate";
 my $logident = "$scriptname";
 my $logoptions = "pid";
 my $logfacility = "LOG_USER";
+my $sysconfig = "/etc/sysconfig/$scriptname";
+my $hacheckcmd = "/usr/share/$scriptname/run_checks";
+# define defaults here that can be overridden by sysconfig file below
 my $protocolVersion=3;
 my $version="3.0.1";
 my $haProd="Pacemaker";
 my $haProdSAP= "$scriptname";
 my $haProdSAPCon= "$scriptname";
 my $haProdDoc="https://github.com/ClusterLabs/sap_cluster_connector";
-my $sysconfig = "/etc/sysconfig/$scriptname";
-my $hacheckcmd = "/usr/share/$scriptname/run_checks";
+
+# read config file
+open(CONFIGFILE, $sysconfig) or syslog("LOG_INFO", "Warning: unable to to open config file $sysconfig");
+my $config = join "", <CONFIGFILE>;
+close CONFIGFILE;
+eval $config;
+die "Couldn't interpret the configuration file ($sysconfig) that was given.\nError details follow: $@\n" if $@;
 
 #
 # open syslog
@@ -735,7 +743,7 @@ if  ($cmd eq "init")  {
 	$nowstring = localtime;
 	printf "%s : unkown function %s\n", $nowstring, $cmd;
  	paramproblem()
- }
-	
+}
+
 closelog();
 exit $return_code;
