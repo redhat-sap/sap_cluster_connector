@@ -666,7 +666,7 @@ if  ($cmd eq "init")  {
 	                   "out=s" => \$out,
 		 ) &&
 	checkavail(($sid, $ino, $out)) || paramproblem();
-	syslog("LOG_INFO", "lsr call (out=%s,sid=%s,ino=%s)", $out, $sid, $ino);
+	syslog("LOG_INFO", "lsr call (sid=%s,ino=%s,out=%s)", $sid, $ino, $out);
 	$return_code=list_sap_resources($out, $sid, $ino);
 	
  } elsif ( $cmd eq "fra" ) {
@@ -711,7 +711,7 @@ if  ($cmd eq "init")  {
                            "out=s" => \$out,
                  ) &&
         checkavail(($sid, $ino, $out)) || paramproblem();
-        syslog("LOG_INFO", "hcc call (out=%s)", $out);
+        syslog("LOG_INFO", "hcc call (sid=%s,ino=%s,out=%s)", $sid, $ino, $out);
         $return_code=ha_config_check($out,$sid,$ino);
 
 } elsif ( $cmd eq "smm" ) {
@@ -720,10 +720,10 @@ if  ($cmd eq "init")  {
         $result = GetOptions ("sid=s" => \$sid,    
                            "ino=s" => \$ino,
                            "out=s" => \$out,
-                           "mod:s" => \$nmode,
+                           "mod=s" => \$nmode,
                  ) &&
         checkavail(($sid, $ino, $out)) || paramproblem();
-        syslog("LOG_INFO", "smm call (out=%s)", $out);
+        syslog("LOG_INFO", "smm call (sid=%s,ino=%s,out=%s,mod=%s)", $sid, $ino, $out, $nmode);
         $return_code=set_maintenance_mode($out, $sid, $ino, $nmode);
 
 } else  {
