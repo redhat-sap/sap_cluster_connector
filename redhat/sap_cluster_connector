@@ -567,11 +567,31 @@ sub ha_config_check {
     return $rc;
 }
 
+sub check_maintanance_mode {
+	my ($res) = @_;
+	my $retcode;
+
+	if (system("$cmd_crm_resource | grep -qE \"\[\[:space:\]\]$res\[\[:space:\]\]\"") ) {
+		syslog("LOG_INFO", "resource %s not found in the cluster\n", $res);
+		return 2;
+	}
+
+	my $retcode = system("$cmd_crm_resource | grep -E \"\[\[:space:\]\]$res\[\[:space:\]\]\" | grep -q unmanaged");
+	$retcode=$retcode >> 8;
+	if ( $retcode eq "0" ) {
+		syslog("LOG_INFO", "resource %s is in maintanance mode\n", $res);
+	} else {
+		syslog("LOG_INFO", "resource %s is not in maintanance mode\n", $res);
+	}
+	return $retcode;
+}
+
 sub set_maintenance_mode {
 	my $rc=0;
 	my $mm=0;
 	my ($out, $sid, $ino, $nmode) = @_;
 	my $res;
+	my $status;
 	$nowstring = localtime;
 	printf "%s : smm($out, $sid, $ino, $nmode)\n", $nowstring;
 
@@ -584,6 +604,18 @@ sub set_maintenance_mode {
 	} else {
 		printf "DEBUG-MODE $mm\n" ;
 	}
+
+	$status=check_maintanance_mode($res);
+	if ( $status eq "2" ) {
+		# logging happens above
+		return 2;
+	}
+
+	if ( $status ne $nmode ) {
+		syslog("LOG_INFO", "Resources %s already in requested mode\n",$res);
+		return 0;
+	}
+
 	if ( $nmode eq "1" ) {
 		syslog("LOG_INFO", "Activate maintenance mode for resource %s\n",$res);
 		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=maintenance", "--parameter-value", "true") ) { $rc=1; }
