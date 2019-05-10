@@ -579,11 +579,6 @@ sub check_maintanance_mode {
 	my ($res) = @_;
 	my $retcode;
 
-	if (system("$cmd_crm_resource | grep -qE \"\[\[:space:\]\]$res\[\[:space:\]\]\"") ) {
-		syslog("LOG_INFO", "resource %s not found in the cluster\n", $res);
-		return 2;
-	}
-
 	my $retcode = system("$cmd_crm_resource | grep -E \"\[\[:space:\]\]$res\[\[:space:\]\]\" | grep -q unmanaged");
 	$retcode=$retcode >> 8;
 	if ( $retcode eq "0" ) {
@@ -605,23 +600,25 @@ sub set_maintenance_mode {
 
 	$res=get_resource_from_sid_ino($sid, $ino);
 
+	$status=check_maintanance_mode($res);
+	syslog("LOG_INFO", "check_maintenance_mode call (retcode=%s)", $status);
+        if ( $status eq "0" ) {
+                # maintenance mode is active for resource
+                $mm=1;
+        } elsif ( $status eq "1" ) {
+                # maintenance mode is not active for resource
+                $mm=0;
+        } else {
+                # maintenance mode is divergent for resource
+                $mm=2;
+        }
+
 	if ( $out ne "" ) {
 		open OUTFILE, ">$out";
 		printf OUTFILE "%s\n", $mm ;
 		close OUTFILE;
 	} else {
 		printf "DEBUG-MODE $mm\n" ;
-	}
-
-	$status=check_maintanance_mode($res);
-	if ( $status eq "2" ) {
-		# logging happens above
-		return 2;
-	}
-
-	if ( $status ne $nmode ) {
-		syslog("LOG_INFO", "Resources %s already in requested mode\n",$res);
-		return 0;
 	}
 
 	if ( $nmode eq "1" ) {
