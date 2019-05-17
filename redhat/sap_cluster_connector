@@ -623,10 +623,10 @@ sub set_maintenance_mode {
 
 	if ( $nmode eq "1" ) {
 		syslog("LOG_INFO", "Activate maintenance mode for resource %s\n",$res);
-		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=maintenance", "--parameter-value", "true") ) { $rc=1; }
+		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=is-managed", "--parameter-value", "false") ) { $rc=1; }
 	} elsif ( $nmode eq "0" ) {
 		syslog("LOG_INFO", "Deactivate maintenance mode for resource %s\n",$res);
-		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=maintenance", "--parameter-value", "false") ) { $rc=1; }
+		if (system($cmd_crm_resource, "-r", $res, "--meta", "--delete-parameter=is-managed") ) { $rc=1; }
 	} else {
 		syslog("LOG_INFO", "Check maintenance mode for resource %s\n",$res);
 		$rc=0;
