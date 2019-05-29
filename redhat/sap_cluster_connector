@@ -243,7 +243,7 @@ sub get_resource_from_sid_ino {
 	my ($sid, $ino) = @_;
 	my $rc=2;
 	$nowstring = localtime;
-	printf "%s : get_resource_from_sid_ino()\n", $nowstring;
+	printf "%s : get_resource_from_sid_ino($sid, $ino)\n", $nowstring;
 
 	my ($sclass, $sprovider, $sra, $sparam, $sparam2 ) = ("ocf", "heartbeat", "SAPInstance", "InstanceName", "ERS_InstanceName");
 
@@ -273,7 +273,7 @@ sub get_resource_from_sid_ino {
 					my $finstance=$1;
 					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
 						$foundRes=1;
-					    syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam, $finstance);
+						syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam, $finstance);
 					}
 				}
 			}
@@ -287,7 +287,7 @@ sub get_resource_from_sid_ino {
 					my $finstance=$1;
 					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
 						$foundRes=1;
-					    syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam2, $finstance);
+						syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam2, $finstance);
 					}
 				}
 			}
@@ -299,12 +299,27 @@ sub get_resource_from_sid_ino {
 	}
 
 	if ($foundRes==1) {
-		return $fname;
+		return ($fname, $fgname);
 	} else {
 		syslog("LOG_INFO","get_resource_from_sid_ino result: empty\n");
-		return 1;
 	}
 
+}
+
+sub check_maintanance_mode {
+	my ($res) = @_;
+	my $retcode;
+	$nowstring = localtime;
+	printf "%s : check_maintenance_mode($res)\n", $nowstring;
+
+	my $retcode = system("$cmd_crm_resource | grep -E \"\[\[:space:\]\]$res\[\[:space:\]\]\" | grep -q unmanaged");
+	$retcode=$retcode >> 8;
+	if ( $retcode eq "0" ) {
+		syslog("LOG_INFO", "resource %s is in maintanance mode\n", $res);
+	} else {
+		syslog("LOG_INFO", "resource %s is not in maintanance mode\n", $res);
+	}
+	return $retcode;
 }
 
 sub list_sap_resources {
@@ -317,92 +332,27 @@ sub list_sap_resources {
 	printf "%s : lsr()\n", $nowstring;
 	#
 	# TODO: If a query for SID+InstNR returns multiple row  fire a error message (syslog and developer trace log)
-	#
-	# typical crm syntax/output:
-	# primitive rsc_SAPInstance_NA0_ASCS00_sapna0as ocf:heartbeat:SAPInstance \
-	#        params InstanceName="NA0_ASCS00_sapna0as" AUTOMATIC_RECOVER="true" START_PROFILE="/usr/sap/NA0/SYS/profile/START_ASCS00_sapna0as" \
-	#        op monitor interval="120s" timeout="60s" start_delay="120s" \
-	#        op start interval="0" timeout="120s" \
-	#        op stop interval="0" timeout="180s" on_fail="block" \
-	#        meta target-role="Stopped"
-	#
-	# TODO: we might also need to check param  ERS_InstanceName
-	#
-	#use IO::Handle;
 
-	my ($sclass, $sprovider, $sra, $sparam, $sparam2 ) = ("ocf", "heartbeat", "SAPInstance", "InstanceName", "ERS_InstanceName");
-	#my ($out, $sid, $ino ) = @ARGV;
+	my ($fname, $fgname) = get_resource_from_sid_ino($sid, $ino);
 
-	$ENV{'PATH'} = $ENV{'PATH'} . ":/usr/sbin:/sbin";
-	#printf "LSR\n";
-	#printf "PARAMS: (out, sid, ino) = ( %s, %s, %s)\n", $out, $sid, $ino ;
-	#printf "ARGV: %s", join(" ", @ARGV);
+	if ($fname ne "") {
 
-	my ($fclass, $fprovider, $fra, $fname, $fgname) = ("","","","","");
-	my $foundRes = 0; # found correct Resource
+		my $status = check_maintanance_mode($fname);
+        	syslog("LOG_INFO", "check_maintenance_mode call (retcode=%s)", $status); 
 
-	open CRMOUT, "$cmd_cibadmin --local -Q --xpath '//primitive[\@type=\"$sra\"]' --node-path 2>/dev/null |" || die "could not open cibadmin output";
-	while (<CRMOUT>) {
-		my $line = $_;
-		if ($line =~ /primitive..id='([a-zA-Z0-9_-]+)'/) {
-			($fname) = ($1);
+		if ( $status eq "0" ) {
+			# maintenance mode is active for resource
+			$rc=3;
+		} elsif ( $status eq "1" ) {
+			# maintenance mode is not active for resource
+			$rc=0;
 		} else {
-			next;
+			# maintenance mode is divergent for resource
+			$rc=2;
 		}
 
-		if ( $line =~ /[group|master|clone]..id='([a-zA-Z0-9_-]+)'/) {
-			($fgname) = ($1);
-		}
-
-		if ($foundRes==0) {
-			open RESOURCE1_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='$sparam']\"  2>/dev/null |" || die "could not open cibadmin output";
-			while (<RESOURCE1_OUT>) {
-				my $result = $_;
-				if ($result =~ /value="([a-zA-Z0-9_-]+)"/) {
-					my $finstance=$1;
-					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
-						$foundRes=1;
-					    syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam, $finstance);
-					}
-				}
-			}
-		}
-
-		if ($foundRes==0) {
-			open RESOURCE2_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='$sparam2']\"  2>/dev/null |" || die "could not open cibadmin output";
-			while (<RESOURCE2_OUT>) {
-				my $result = $_;
-				if ($result =~ /value="([a-zA-Z0-9_-]+)"/) {
-					my $finstance=$1;
-					if ( $1 =~ /^${sid}_[a-zA-Z0-9]+${ino}_[a-zA-Z0-9_-]+$/ ) {
-						$foundRes=1;
-					    syslog("LOG_DEBUG","Resource %s with %s=%s found\n", $fname, $sparam2, $finstance);
-					}
-				}
-			}
-		}
-
-		# check to make sure the resource is managed
-		if ($foundRes==1) {
-			open MANAGED_OUT, "$cmd_cibadmin -Q --xpath \"//primitive[\@id='$fname']//nvpair[\@name='is-managed'][\@value='false']\"  2>/dev/null |" || die "could not open cibadmin output";
-			while (<MANAGED_OUT>) {
-				my $result = $_;
-				if ($result =~ /value="false"/) {
-					syslog("LOG_DEBUG","Resource %s is unmanged - ignore for sapstartsrv lsr call", $fname);
-					$foundRes=0;
-				}
-			}
-		}
-
-		if ($foundRes == 1) {
-			last;
-		}
-	}
-
-	if ($foundRes==1) {
 		if ($out eq "") {
 			printf "%s:%s:%s\n", $fname, $fgname, "-";
-			$rc=1;
 		} else {
 			unless (open(OUT, '>',$out)) {
 				print STDERR "Can't open $out: $!\n";
@@ -410,8 +360,8 @@ sub list_sap_resources {
 			syslog("LOG_INFO","lsr result: %s:%s:%s:%s:%s\n", $sid, $ino, $fname, $fgname, "-");
 			printf OUT "%s:%s:%s:%s:%s\n", $sid, $ino, $fname, $fgname, "-";
 			close OUT;
-			$rc=0;
 		}
+
 	} else {
 		syslog("LOG_INFO","lsr result: empty\n");
 		$rc=1;
@@ -575,61 +525,49 @@ sub ha_config_check {
     return $rc;
 }
 
-sub check_maintanance_mode {
-	my ($res) = @_;
-	my $retcode;
-
-	my $retcode = system("$cmd_crm_resource | grep -E \"\[\[:space:\]\]$res\[\[:space:\]\]\" | grep -q unmanaged");
-	$retcode=$retcode >> 8;
-	if ( $retcode eq "0" ) {
-		syslog("LOG_INFO", "resource %s is in maintanance mode\n", $res);
-	} else {
-		syslog("LOG_INFO", "resource %s is not in maintanance mode\n", $res);
-	}
-	return $retcode;
-}
-
 sub set_maintenance_mode {
 	my $rc=0;
 	my $mm=0;
 	my ($out, $sid, $ino, $nmode) = @_;
-	my $res;
-	my $status;
 	$nowstring = localtime;
 	printf "%s : smm($out, $sid, $ino, $nmode)\n", $nowstring;
 
-	$res=get_resource_from_sid_ino($sid, $ino);
+	my ($res, $grp) = get_resource_from_sid_ino($sid, $ino);
 
-	$status=check_maintanance_mode($res);
-	syslog("LOG_INFO", "check_maintenance_mode call (retcode=%s)", $status);
-        if ( $status eq "0" ) {
-                # maintenance mode is active for resource
-                $mm=1;
-        } elsif ( $status eq "1" ) {
-                # maintenance mode is not active for resource
-                $mm=0;
-        } else {
-                # maintenance mode is divergent for resource
-                $mm=2;
-        }
+	if ($res ne "") {
 
-	if ( $out ne "" ) {
-		open OUTFILE, ">$out";
-		printf OUTFILE "%s\n", $mm ;
-		close OUTFILE;
+		my $status = check_maintanance_mode($res);
+		if ( $status eq "0" ) {
+			# maintenance mode is active for resource
+			$mm=1;
+		} elsif ( $status eq "1" ) {
+			# maintenance mode is not active for resource
+			$mm=0;
+		} else {
+			# maintenance mode is divergent for resource
+			$mm=2;
+		}
+
+		if ( $out ne "" ) {
+			open OUTFILE, ">$out";
+			printf OUTFILE "%s\n", $mm ;
+			close OUTFILE;
+		} else {
+			printf "DEBUG-MODE $mm\n" ;
+		}
+
+		if ( $nmode eq "1" ) {
+			syslog("LOG_INFO", "Activate maintenance mode for resource %s\n",$res);
+			if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=is-managed", "--parameter-value", "false") ) { $rc=1; }
+		} elsif ( $nmode eq "0" ) {
+			syslog("LOG_INFO", "Deactivate maintenance mode for resource %s\n",$res);
+			if (system($cmd_crm_resource, "-r", $res, "--meta", "--delete-parameter=is-managed") ) { $rc=1; }
+		} else {
+			syslog("LOG_INFO", "Check maintenance mode for resource %s\n",$res);
+			$rc=0;
+		}
 	} else {
-		printf "DEBUG-MODE $mm\n" ;
-	}
-
-	if ( $nmode eq "1" ) {
-		syslog("LOG_INFO", "Activate maintenance mode for resource %s\n",$res);
-		if (system($cmd_crm_resource, "-r", $res, "--meta", "--set-parameter=is-managed", "--parameter-value", "false") ) { $rc=1; }
-	} elsif ( $nmode eq "0" ) {
-		syslog("LOG_INFO", "Deactivate maintenance mode for resource %s\n",$res);
-		if (system($cmd_crm_resource, "-r", $res, "--meta", "--delete-parameter=is-managed") ) { $rc=1; }
-	} else {
-		syslog("LOG_INFO", "Check maintenance mode for resource %s\n",$res);
-		$rc=0;
+		$rc=3;
 	}
 	printf "set_maintenance_mode: rc=%s\n", $rc;
 	return $rc;
