@@ -137,7 +137,7 @@ sub fire_resource_action {
 		while (<SYSCONF>) {
 			chomp;
 			my $line = $_;
-			printf "%s...\n",  $line;
+			#printf "%s...\n",  $line;
 			if ($line =~ /BLOCK_RESOURCES=.*$rsc/) {
                    	syslog("LOG_INFO", "BLOCK INFO: fra call %s for resource %s blocked as defined in %s", $act, $rsc, $sysconfig);
 		   	return 0;
@@ -169,7 +169,7 @@ sub check_pending_action {
 	my $rc=0;
 	my $found=0;
 	$nowstring = localtime;
-	printf "%s : cpa()\n", $nowstring;
+	printf "%s : cpa($res, $act, $sta)\n", $nowstring;
 	#
 	# rc:
 	#     0: found
@@ -186,11 +186,11 @@ sub check_pending_action {
 	#    crm_resource -O -r $rsc | grep "${rsc}_${act}_.*: ${sta}"  && rc=0
 	#open CRMOUT, "$cmd_crm_resource -O -r $res 2>/dev/null |" or $rc=2;
 	open CRMOUT, "$cmd_crm_resource -O 2>/dev/null |" or $rc=2;
-	printf "<--------- cpa ------>\n";
+	#printf "<--------- cpa ------>\n";
 	while (<CRMOUT>) {
 		chomp;
 		my $line = $_;
-		printf "%s", $line;
+		#printf "%s", $line;
 		# if ( $line =~ /${res}_${act}_.*: ${sta}/ ) { # FH 2012-01-05: Changed to find also clones and master-slaves
 		#if ( $line =~ /${res}(:[0-9]+_|_)${act}_.*: ${sta}/ ) {
 		#if ( $line =~ /${res}.*: ${sta}/ ) {
@@ -204,9 +204,9 @@ sub check_pending_action {
 		if ( $line =~ /(${res}(:[0-9]+)?_(${act}|demote|promote)_0.*: ${sta})/ ) {
 			$rc=0;
 			syslog("LOG_INFO","Pending action %s for %s found", $1, ${res});
-			printf "<---- FOUND!!";
+			#printf "<---- FOUND!!";
 		}
-		printf "\n";
+		#printf "\n";
 	}
         close CRMOUT;
 	if ( $rc != 0 ) {
@@ -232,7 +232,7 @@ sub check_pending_action {
 	#	syslog("LOG_INFO","SENDING PENDING ACTION FOUND TO DEBUG");
 	#	$rc=0;
         #}
-	printf "</--------- cpa ------>\n";
+	#printf "</--------- cpa ------>\n";
 	return $rc;
 }
 
@@ -329,7 +329,7 @@ sub list_sap_resources {
 	my ($out, $sid, $ino) = @_;
 	my $rc=2;
 	$nowstring = localtime;
-	printf "%s : lsr()\n", $nowstring;
+	printf "%s : lsr($out, $sid, $ino)\n", $nowstring;
 	#
 	# TODO: If a query for SID+InstNR returns multiple row  fire a error message (syslog and developer trace log)
 
@@ -389,7 +389,7 @@ sub list_sap_nodes {
 	my ($outfile, $resource) = @_;
 	my $rc=0;
 	$nowstring = localtime;
-	printf "%s : lsn()\n", $nowstring;
+	printf "%s : lsn($outfile, $resource)\n", $nowstring;
 	# TODO: check implemented action
 	###############################################################################################
 	#
@@ -492,10 +492,10 @@ sub list_sap_nodes {
 }
 
 sub get_version_info {
-	my ($outfile, $resource) = @_;
+	my ($outfile) = @_;
 	my $rc=0;
 	$nowstring = localtime;
-	printf "%s : gvi()\n", $nowstring;
+	printf "%s : gvi($outfile)\n", $nowstring;
 	if ( $outfile ne "" ) {
 		open OUTFILE, ">$outfile";
 		syslog("LOG_INFO", "gvi result: %s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc);
@@ -569,7 +569,6 @@ sub set_maintenance_mode {
 	} else {
 		$rc=3;
 	}
-	printf "set_maintenance_mode: rc=%s\n", $rc;
 	return $rc;
 }
 
