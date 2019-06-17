@@ -46,6 +46,7 @@ my $scriptname = basename($0);
 my $cmd_cibadmin = "cibadmin";
 my $cmd_crm_resource = "crm_resource";
 my $cmd_ptest = "crm_simulate";
+my $cmd_crm_attribute = "crm_attribute";
 my $logident = "$scriptname";
 my $logoptions = "pid";
 my $logfacility = "LOG_USER";
@@ -558,10 +559,12 @@ sub set_maintenance_mode {
 
 		if ( $nmode eq "1" ) {
 			syslog("LOG_INFO", "Activate maintenance mode for resource %s\n",$res);
-			if (system($cmd_crm_resource, "-r", $grp, "--meta", "--set-parameter=is-managed", "--parameter-value", "false") ) { $rc=1; }
+			#if (system($cmd_crm_resource, "-r", $grp, "--meta", "--set-parameter=is-managed", "--parameter-value", "false") ) { $rc=1; }
+			if (system($cmd_crm_attribute, "--name", "maintenance-mode", "--update", "true") ) { $rc=1; }
 		} elsif ( $nmode eq "0" ) {
 			syslog("LOG_INFO", "Deactivate maintenance mode for resource %s\n",$res);
-			if (system($cmd_crm_resource, "-r", $grp, "--meta", "--delete-parameter=is-managed") ) { $rc=1; }
+			#if (system($cmd_crm_resource, "-r", $grp, "--meta", "--delete-parameter=is-managed") ) { $rc=1; }
+			if (system($cmd_crm_attribute, "--name", "maintenance-mode", "--delete") ) { $rc=1; }
 		} else {
 			syslog("LOG_INFO", "Check maintenance mode for resource %s\n",$res);
 			$rc=0;
