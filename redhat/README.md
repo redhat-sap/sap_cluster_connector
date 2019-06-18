@@ -34,7 +34,7 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
   * activate [record-pending](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/_resource_operations.html) resource operation option:  
   pcs (RHEL): `# pcs resource op defaults record-pending=true`  
   crmsh (SLES): `# crm configure op_defaults record-pending=true`  
-  **Note:** on pacemaker 2.x and some pacemaker 1.x versions shipped with some Linux distributions`record-pending` is already activated by default. Please check the release notes of your pacemaker version to se if this is the case or if `record-pending` needs to be activated manually.
+  **Note:** on pacemaker 2.x and some pacemaker 1.x versions shipped with some Linux distributions`record-pending` is already activated by default. Please check the release notes of your pacemaker version to see if this is the case or if `record-pending` needs to be activated manually.
 
   * add SIDadm user to "haclient" group on each node:  
   ```
@@ -53,52 +53,71 @@ This allows that SAP instance which are manged by a cluster to be controlled by 
   * restart the Instance (including the sapstartsrv for that instance)
 
 ## Usage
-The cluster connector is normaly called automatically in case an action on a SAP insance is performed via the SAP management tools that requires some interaction with the cluster.
+The cluster connector is normally called automatically by the sapstartsrv of a SAP instance in case an action on the SAP instance is performed via the SAP management tools that requires some interaction with the cluster.
 
 To verify that the cluster connector is working correctly it is also possible to run the sap_cluster_connector script manually or to trigger its execution via `sapcontrol`.
 
 ### Examples for running sap_cluster_connector directly
-Do a minor check, if the cluster framework command line interface is available:
+**Basic initialization:**
 ```
 # /usr/bin/sap_cluster_connector init
 ```
-Get some basic information about the cluster product used:
+**Get some basic information about the cluster product used:**
 ```
 #/usr/bin/sap_cluster_connector gvi --out /tmp/gvi.txt
 ```
-Look-up the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:
+**Look-up the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02:**
 ```
 # /usr/bin/sap_cluster_connector lsn --out /tmp/lsn.txt --res rsc_sap_C11_D02
 ```
-Look-up the SAP instance number 02 of the SAP system C11 and return the cluster resource name:
+**Look-up the SAP instance number 02 of the SAP system C11 and return the cluster resource name:**
 ```
 # /usr/bin/sap_cluster_connector lsr --out /tmp/lsr.txt --sid C11 --ino 02
 ```
-Start the cluster resource rsc_sap_C11_D02:
+**Start the cluster resource rsc_sap_C11_D02:**
 ```
 # /usr/bin/sap_cluster_connector fra --res rsc_sap_C11_D02 --act start
 ```
-Check, if the cluster action to start the SAP instance for system C11 and instance number 02 is already in progress:
+**Check if the cluster action to start the SAP instance for system C11 and instance number 02 is already in progress:**
 ```
 # /usr/bin/sap_cluster_connector cpa --res rsc_sap_C11_D02 --act start
 ```
-Move the cluster resource rsc_sap_C11_D02 to the cluster node node2:
+**Move the cluster resource rsc_sap_C11_D02 to the cluster node node2:**
 ```
 # /usr/bin/sap_cluster_connector fra --res rsc_sap_C11_D02 --act migrate --node node2
 ```
+**Check the status of maintenance mode:**
+```
+# /usr/bin/sap_cluster_connector smm --out /tmp/smm.txt --sid C11 --ino 02 --mod -1
+```
+**Activate maintenance mode:**
+```
+# /usr/bin/sap_cluster_connector smm --out /tmp/smm.txt --sid C11 --ino 02 --mod 1
+```
+**Deactivate maintenance mode:**
+```
+# /usr/bin/sap_cluster_connector smm --out /tmp/smm.txt --sid C11 --ino 02 --mod 0
+```
 ### Examples for calling sap_cluster_connector via sapcontrol
-Perform a check of the HA configuration:
+**Perform a check of the HA configuration:**
 ```
-# /usr/sap/hostctrl/exe/sapcontrol -nr 29 -function HACheckConfig
+# /usr/sap/C11/D02/exe/sapcontrol -nr 02 -function HACheckConfig
 ```
-Trigger the failover of a SAP instance to another cluster node:
+**Trigger the failover of a SAP instance to another cluster node:**
 ```
-# /usr/sap/hostctrl/exe/sapcontrol -nr 20 -function HAFailoverToNode
+# /usr/sap/C11/D02/exe/sapcontrol -nr 02 -function HAFailoverToNode
+```
+**Check status of maintenance mode:**
+```
+# /usr/sap/C11/D02/exe/sapcontrol -nr 02 -function HACheckMaintenanceMode
+```
+**Activate/Deactivate maintenance mode:**  
+(if the '1' at the end is ommited sapstartsrv will attempt to carry out the command on all instances of the SAP environment, otherwise the command will only be run for the instance with the given instance number):
+```
+# /usr/sap/C11/D02/exe/sapcontrol -nr 02 -function HASetMaintenanceMode [1|0] {1}
 ```
 
 ## TODO
-  * implement function to activate maintenance mode (sww)
-  * add functionality to also read information about HA product from config file
   * add check for record-pending option
   * code cleanup
 
