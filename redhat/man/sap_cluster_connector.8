@@ -1,339 +1,385 @@
-.TH sap_cluster_connector 8 "1 January 2019" "sap_cluster_connector" "SAP High Availability"
-.\"
-.SH NAME
+.\" 
+.TH "sap_cluster_connector" "8" "1 January 2019" "sap_cluster_connector" "SAP High Availability"
+.SH "NAME"
 sap_cluster_connector \- handle sapstartsrv cluster calls
-.\"
-.SH SYNOPSIS
-.P
-.B sap_cluster_connector \fIcommand\fR \fIoptions-and-parameters\fR
-.\"
-.SH DESCRIPTION
-\fBsap_cluster_connector\fP is the interface between the SAP HA Interface and the cluster software. Currently it needs to serve calls like queries about cluster status or to request cluster resource actions.
-.SH COMMANDS
-.HP
-\fBhelp\fR or \fB--help\fR or \fB-h\fR or \fB-?\fR
-.br
+.SH "SYNOPSIS"
+sap_cluster_connector command options\-and\-parameters
+
+.SH "DESCRIPTION"
+sap_cluster_connector is the interface between the SAP HA Interface and the cluster software. Currently it needs to serve calls like queries about cluster status or to request cluster resource actions.
+.SH "COMMANDS"
+help or \-\-help or \-h or \-?
 print help text and usage.
-.HP
-\fBinit\fR
-.br
+
+init
 check cluster installation and do some optional initialization.
-.HP
-\fBgvi\fR --out \fIFILE\fR
-.br
+
+gvi \-\-out FILE
 get version info. This command is needed since version 2 of the sap script connector API.
-.HP
-\fBhcc\fR --out \fIFILE\fR --sid \fISID\fR --ino \fIINO\fR
-.br
+
+hcc \-\-out FILE \-\-sid SID \-\-ino INO
 perform ha configuration checks. This command is needed since version 2 of the sap script connector API.
-.HP
-\fBlsn\fR --out \fIFILE\fR --res \fIRES\fR
-.br
+
+lsn \-\-out FILE \-\-res RES
 list sap nodes for specified resource.
-.HP
-\fBlsr\fR --out \fIFILE\fR --sid \fISID\fR --ino \fIINO\fR
-.br
+
+lsr \-\-out FILE \-\-sid SID \-\-ino INO
 list sap resources matching the search criteria.
-.HP
-\fBcpa\fR --res \fERES\fR --act \fIACT\fR
-.br
+
+cpa \-\-res \fERES \-\-act ACT
 check for specified pending/active actions in the cluster.
-.HP
-\fBfra\fR --res \fIRES\fR --act \fIACT\fR  [ --nod \fINODE\fR ]
-.br
-fire/start a cluster action like start/stop/migrate a resource.
-\."
-.SH PARAMS
-.HP
-\fBSID\fR  
+
+fra \-\-res RES \-\-act ACT  [ \-\-nod NODE ]
+fire/start a cluster action like start/stop/migrate a resource
+
+smm \-\-out FILE \-\-sid SID \-\-ino INSTNO \-\-mod NMODE
+set/get maintenance mode. This command is used since version 3 of the sap script connector API.
+.SH "PARAMS"
+SID  
 SAP System Identifier  (3 alphanum)
-.HP
-\fBINO\fR 
+
+INO 
 SAP Instance Number (2 digits)
-.HP
-\fBACT\fR 
+
+ACT 
 Cluster action "start", "stop" or "migrate"
-.HP
-\fBFILE\fR 
+
+FILE 
 Outputfile for result parsing
-.HP
-\fBRES\fR 
+
+RES 
 Cluster Resource Identifier
-.HP
-\fBNODE\fR 
+
+NODE 
 Cluster Node Name
-\."
-.SH OUTPUT FIELDS
-All param identifiers like \fBSID\fR might also be referenced in output formats (see detailed command description). Additionaly there are some referenced output fields, which are not used as parameters:
-.HP
-\fBGRP\fR 
-Cluster Group Identifier
-.HP
-\fBCLUSTER_NODES\fR
-List of NODE (separated with comma (,)) within the cluster that could run the resource
-.HP
-\fBCURR_NODE\fR
-NODE which is currently running the resource
-.HP
-\fBPRIO_NODES\fR
-Priorized List of NODE (separated with comma (,)) within the cluster that could run the resource
-.HP
-.SH COMMANDS IN DETAIL
-.HP
-\fBinit\fR (initialize)
-.br
+
+NMODE 
+Maintenance mode action (\-1: don't set mode, just return actual mode, 0: deactivate mode, 1: activate mode)
+.SH "OUTPUT FIELDS"
+Some commands need to generate formatted output to be parsed by the SAP library calling this script. The fields of such output are:
+
+CHK\-STATE Status of an HA check (see SAP Interface description)
+
+CHK\-CATEGORY Category of an HA check (see SAP Interface description)
+
+CHK\-DESCRIPTION Description of an HA check (see SAP Interface description)
+
+CHK\-COMMENT Comment about HA check result (see SAP Interface description)
+
+CLUSTER_NODES List of NODE (separated with comma (,)) within the cluster that could run the resource
+
+CURR_NODE NODE which is currently running the resource
+
+GRPID Cluster Group Identifier
+
+HAPROD HA product and version
+
+HAPROD\-DOC Documentation URL and SAP Note
+
+HAPROD\-SAP SAP\-HA Interface product and version
+
+HASCRIPTCO\-VERS HA script connector protocol version. Must be 3 for current version.
+
+INSTNO SAP Instance Number (2 digits)
+
+MM\-STATE Status of maintenance mode (0: inactive, 1: active, 2: divergent); in case the mode is set, the previous mode is returned
+
+PRIO_NODES Priorized List of NODE (separated with comma (,)) within the cluster that could run the resource
+
+RESID Cluster Resource Identifier
+
+SID SAP system identifier (3 alphanum)
+.SH "COMMANDS IN DETAIL"
+init (initialize)
+
 Perform some basic tests, if the cluster software is installed and the cluster framework is started. This is not intended to
 do a cluster validation. The command should only check, whether the cluster commands used are available. The check "cluster
-framework strarted?" might be ignored - maybe it does not fit for some cluster architectures. In that case the check only needs
+framework strarted?" might be ignored \- maybe it does not fit for some cluster architectures. In that case the check only needs
 to test the availability of the external and needed cluster commands.
 
 Optionaly: This command could also implement some initializations, if needed.
 
-\fBParameters\fR
-.br
+Parameters
+
 None.
 
-\fBReturn Codes\fR
-.br 
+Return Codes
+
 0: cluster software seams to be installed proper and cluster framework is started on local node.
-.br
+
 1: error during detection of cluster status
-.br
+
 2: script notified bad parameters
-.br
+
 3: cluster commands are not installed correctly (missing commands)
-.br
+
 4: cluster commands are installed correctly but cluster framework is not running (optional)
 
-\fBOutput\fR
-.br
+Output
+
 None.
-.HP
-\fBgvi\fR (get version info)
-.br
+
+
+gvi (get version info)
+
 This command prints the version info of the HA product and the SAP HA interface and where to find additional information.
 
-\fBParameters\fR - all parameters are mandatory.
-.br
---out \fIFILE\fP
+Parameters \- all parameters are mandatory.
+
+\-\-out FILE
 Output file to be used.
 
-\fBReturn Codes\fR
-.br
+Return Codes
+
 0: success;
 
 1: no success / internal error;
 
 2: script notified bad parameters
 
-\fBOutput\fR
-Formatted query answer to given \fIFILE\fP.
-.br
-- One single answer (data set) is allowed
+Output
+Formatted query answer to given FILE.
 
-- Multiline answer
+\- One single answer (data set) is allowed
 
-- Format:
-HASCRIPTCO-VERS
-.br
+\- Multiline answer
+
+\- Format:
+HASCRIPTCO\-VERS
+
 HAPROD
-.br
-HAPROD-SAP
-.br
-HAPROD-DOC
-.HP
-\fBhcc\fR (HA config check)
-.br
+
+HAPROD\-SAP
+
+HAPROD\-DOC
+
+
+hcc (HA config check)
+
 This command performs some HA configuration checks defined by the HA vendor and prints formatted output with test results.
 
-\fBParameters\fR - all parameters are mandatory.
-.br
---out \fIFILE\fP
+Parameters \- all parameters are mandatory.
+
+\-\-out FILE
 Output file to be used.
-.br
---sid \fISID\fP
+
+\-\-sid SID
 SAP system identifier to be queried.
-.br
---ino \fIINO\fP
+
+\-\-ino INO
 SAP instance number to be queried.
 
-\fBReturn Codes\fR
-.br
+Return Codes
+
 0: success;
 
 1: no success / internal error;
 
 2: script notified bad parameters
 
-\fBOutput\fR
-Formatted query answer to given \fIFILE\fP.
-.br
-- Multiple rows (data sets) are allowed
+Output
+Formatted query answer to given FILE.
 
-- Each row / data set covers its values in a colon-separated (’:’) list.
+\- Multiple rows (data sets) are allowed
 
-- Format: CHK-STATE:CHK-CATEGORY:CHK-DESCRIPTION:CHK-COMMENT
-.HP
-\fBlsn\fR (list sap nodes)
-.br
+\- Each row / data set covers its values in a colon\-separated (’:’) list.
+
+\- Format: CHK\-STATE:CHK\-CATEGORY:CHK\-DESCRIPTION:CHK\-COMMENT
+
+
+lsn (list sap nodes)
+
 This command should list the current node and a priorized list of possible cluster nodes for a specific SAP instance. In this case the SAP instance is queried by the cluster resource name.
 
-\fBParameters\fR
-.br
---out \fIFILE\fP 
+Parameters
+
+\-\-out FILE 
 Output file for results.
-.br
---res \fIRES\fP
+
+\-\-res RES
 Cluster resource to be queried.
 
-\fBReturn Codes\fR
-.br
+Return Codes
+
 0: success;
-.br
+
 1: no success / internal error;
-.br
+
 2: script notified bad parameters;
 
-\fBOutput\fR 
-Formatted query answer to given \fIFILE\fP.
-.br
-- One single row (data set).
-.br
-- Values are separated by a colon (':').
-.br
-- Format:  \fIRES\fR:\fIGRP\fR:\fICURR_NODE\fR:\fIPRIO_NODES\fR
-.HP
-\fBlsr\fR (list sap resources)
-.br
+Output 
+Formatted query answer to given FILE.
+
+\- One single row (data set).
+
+\- Values are separated by a colon (':').
+
+\- Format:  RES:GRP:CURR_NODE:PRIO_NODES
+
+
+lsr (list sap resources)
+
 This command is used to figure out the cluster resource and optionally group name for a specific SAP system and instance.
 
-\fBParameters\fR - all parameters are mandatory
-.br
---out \fIFILE\fP
+Parameters \- all parameters are mandatory
+
+\-\-out FILE
 Output file to be used.
-.br
---sid \fISID\fP
+
+\-\-sid SID
 SAP system identifier to be queried.
-.br
---ino \fIINO\fP
+
+\-\-ino INO
 SAP instance number to be queried.
 
-\fBReturn Codes\fR
-.br
+Return Codes
+
 0: success
-.br
+
 1: no success / internal error
-.br
+
 2: script notified bad parameters
 
-\fBOutput\fR
-Formatted query answer to given \fIFILE\fP.
-.br
-- Multiple rows (data sets) allowed even if typically there should only be one resource matching the query.
-.br
-- Each row / data set covers its values in a colon-separated (':') list.
-.br
-- Format:   \fISID\fP:\fIINO\fP:\fIRES\fP:\fIGRP\fP:\fICLUSTER_NODES\fP
+Output
+Formatted query answer to given FILE.
 
-.HP
-\fBcpa\fR (check for pending actions)
-.br
+\- Multiple rows (data sets) allowed even if typically there should only be one resource matching the query.
+
+\- Each row / data set covers its values in a colon\-separated (':') list.
+
+\- Format:   SID:INO:RES:GRP:CLUSTER_NODES
+
+
+cpa (check for pending actions)
+
 This command should check properly against the running cluster, if a given
 action on a SAP Instance is already running
 
-\fBParameters\fR - all parameters are mandatory.
-.br
---res \fIRES\fR 
+Parameters \- all parameters are mandatory.
+
+\-\-res RES 
 Cluster resource to be queried
-.br 
---act \fIACT\fR
+
+\-\-act ACT
 Action type (start/stop) to be queried.
 
-\fBReturn Codes\fR
-.br
+Return Codes
+
 0: found pending action of queried type
-.br
+
 1: did not found pending action of queried type
-.br
+
 2: script notified bad parameters
 
-\fBOutput\fR
+Output
 None.
-.HP
-\fBfra\fR (fire resource action)
-.br
+
+
+fra (fire resource action)
+
 This command fires a cluster change like "stop resource XX" or "start resource XX". It is not intended to wait till the cluster has processed the resource change. The SAP instance is specified by the cluster resource name.
 
-\fBParameters - only \fINODE\fP is optional.\fR
-.br
---res \fIRES\fP 
+Parameters \- only NODE is optional.
+
+\-\-res RES 
 Cluster resource to be controlled.
-.br
---act \fIACT\fP
+
+\-\-act ACT
 Cluster action (start/stop/migrate) to be "fired".
-.br 
-[ --nod \fINODE\fP ]
+
+[ \-\-nod NODE ]
 For migrations this defines the destination node.
 
-\fBReturn Codes\fR
-.br
+Return Codes
+
 0: success; 
-.br
+
 1: no success / internal error; 
-.br
+
 2: script notified bad parameters
 
-\fBOutput\fR None.
-.HP
-.SH EXAMPLES
-.HP
-\fBsap_cluster_connector init\fR
-.br
+Output None.
+
+
+smm (set/get maintenance mode)
+
+This command activates or deactivates the maintenance mode for the specified clustered instance or delivers its status concerning the maintenance mode. In case this command is implemented, as a minimal requirement the cluster software has to (de)activate the maintenance mode when the resources are online. It is allowed to refuse the (de)activation otherwise. In case the mode is set, the previous mode is returned.
+
+Parameters
+
+\-\-out FILE
+Output file to be used.
+
+\-\-sid SID
+SAP system identifier to be queried.
+
+\-\-ino INSTNO
+SAP instance number to be queried.
+
+\-\-mod NMODE
+action type to be done (\-1: get / 0: deactivate / 1: activate)
+
+Return Codes
+
+0: success;
+
+1: no success / internal error;
+
+2: script notified bad parameters;
+
+3: not clustered
+
+Output Formatted query answer to given FILE.
+One single row.
+Format: MM\-STATE.
+
+.SH "EXAMPLES"
+sap_cluster_connector init
+
 Do a minor check, if the cluster framework command line interface is available.
-.HP
-\fBsap_cluster_connector lsr –out /tmp/myfile00.txt –sid C11 –ino 02\fR
-.br
-Look-up for the SAP instance number 02 of the SAP system C11 and return the cluster resource name.
+
+sap_cluster_connector lsr \-\-out /tmp/lsr.txt \-\-sid C11 \-\-ino 02
+
+Look\-up for the SAP instance number 02 of the SAP system C11 and return the cluster resource name.
 C11:02:rsc_sap_C11_D02:grp_sap_C11_Dialog2:ls3198,ls3199
-.HP
-\fBsap_cluster_connector fra –res rsc_sap_C11_D02 –act start\fR
-.br
+
+sap_cluster_connector fra \-\-res rsc_sap_C11_D02 \-\-act start
+
 Start the cluster resource rsc_sap_C11_D02. While the lsr command returned the resource name rsc_sap_C11_D02 the matching SAP instance is C11, instance number 02 (see example before).
-.HP
-\fBsap_cluster_connector cpa –res rsc_sap_C11_D02 –act start\fR
-.br
+
+sap_cluster_connector cpa \-\-res rsc_sap_C11_D02 \-\-act start
+
 Check, if the cluster action to start the SAP instance for system C11 and instance number 02 is already in progress.
-.HP
-\fBsap_cluster_connector lsn –out /tmp/myfile01.txt –res rsc_sap_C11_D02\fR
-.br
-Look-up for the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02.
+
+sap_cluster_connector lsn \-\-out /tmp/lsn.txt \-\-res rsc_sap_C11_D02
+
+Look\-up for the current cluster node and all possible cluster nodes to run the cluster resource named rsc_sap_C11_D02.
 rsc_sap_C11_D02:grp_sap_C11_Dialog2:ls3198:ls3198,ls3199
-.\"
-.SH EXIT STATUS
-See detailled descrition of the command. In general:
-.HP
-.B 0
-	successfull command termination or "yes" to a yes-no-query
-.HP
-.B 1
-	unsucessfull command termination or "no" to a yes-no-query
-.HP
-.B 2
-	error occurred during command termination - mostly bad parameters
-.\"
-.SH BUGS
-No known bugs yet.
-.\"
-.SH SEE ALSO
-\fBsbd\fP(7), \fBsbd\fP(8), \fBstonith\fP(8), \fBClusterTools2\fP(7)
-.SH AUTHOR
+
+sap_suse_cluster_connector smm \-\-out /tmp/smm.txt \-\-sid C11 \-\-ino 02 \-\-mod 1
+
+Activate the maintenance mode for the SAP instance number 02 of the SAP system C11 and return the previous mode.
+0 (previously, the maintenance mode was deactivated)
+.SH "EXIT STATUS"
+See detailed description of the command. In general:
+
+0 \- successful command termination or "yes" to a yes\-no\-query
+
+1 \- unsuccessful command termination or "no" to a yes\-no\-query
+
+2 \- error occurred during command termination \- mostly due to bad parameters
+
+Exit code 2 must be used, if an unknown command has been detected on the command line. The script\-library calling sap_cluster_connector could use this return code to check/probe the availability of a sap_cluster_connector command.
+.SH "BUGS"
+See https://github.com/fdanapfel/sap_cluster_connector/issues
+.SH "SEE ALSO"
+pacemaker(8), crm_resource(8), crm_resource(8), crm_simulate(8)
+.SH "AUTHORS"
 Fabian Herschel fabian.herschel@suse.com
 SAP Architect & Technical Manager
 
 Frank Danapfel frank.danapfel@redhat.com
 Senior Software Engineer
-.\"
-.SH COPYRIGHT
+.SH "COPYRIGHT"
 For details see the GNU General Public License at
 http://www.gnu.org/licenses/gpl.html
-.\"
