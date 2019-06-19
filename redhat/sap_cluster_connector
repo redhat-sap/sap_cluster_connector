@@ -55,17 +55,6 @@ my $hacheckcmd = "/usr/share/$scriptname/run_checks";
 # define defaults here that can be overridden by sysconfig file below
 my $protocolVersion=3;
 my $version="3.0.1";
-my $haProd="Pacemaker";
-my $haProdSAP= "$scriptname";
-my $haProdSAPCon= "$scriptname";
-my $haProdDoc="https://github.com/ClusterLabs/sap_cluster_connector";
-
-# read config file
-open(CONFIGFILE, $sysconfig) or syslog("LOG_INFO", "Warning: unable to to open config file $sysconfig");
-my $config = join "", <CONFIGFILE>;
-close CONFIGFILE;
-eval $config;
-die "Couldn't interpret the configuration file ($sysconfig) that was given.\nError details follow: $@\n" if $@;
 
 #
 # open syslog
@@ -495,8 +484,21 @@ sub list_sap_nodes {
 sub get_version_info {
 	my ($outfile) = @_;
 	my $rc=0;
+	my $haProd="Pacemaker";
+	my $haProdSAP= "$scriptname";
+	my $haProdSAPCon= "$scriptname";
+	my $haProdDoc="https://github.com/ClusterLabs/sap_cluster_connector";
+
 	$nowstring = localtime;
 	printf "%s : gvi($outfile)\n", $nowstring;
+
+	# read config file
+	open(CONFIGFILE, $sysconfig) or syslog("LOG_INFO", "Warning: unable to to open config file $sysconfig");
+	my $config = join "", <CONFIGFILE>;
+	close CONFIGFILE;
+	eval $config;
+	die "Couldn't interpret the configuration file ($sysconfig) that was given.\nError details follow: $@\n" if $@;
+
 	if ( $outfile ne "" ) {
 		open OUTFILE, ">$outfile";
 		syslog("LOG_INFO", "gvi result: %s\n%s\n%s\n%s\n", $protocolVersion, $haProd, $haProdSAP, $haProdDoc);
