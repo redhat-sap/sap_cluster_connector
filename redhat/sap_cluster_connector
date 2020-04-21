@@ -401,7 +401,7 @@ sub list_sap_nodes {
 	chomp $crm_res_location_in;
 	#printf "DBG: where-result: %s\n", $crm_res_location_in;
 	my $current_node="";
-	if ( $crm_res_location_in =~ /^resource\s+(\w)+\sis running on:\s+(\w+)\W*/ ) {
+	if ( $crm_res_location_in =~ /^resource\s+(\w)+\sis running on:\s+([a-zA-Z0-9_-]+)/ ) {
 		#printf "DBG: where-result: match\n";
 		$current_node = $2;
 	}
@@ -425,12 +425,12 @@ sub list_sap_nodes {
 	while (<PTEST>) {
 		chomp;
 		# printf "%s\n", $_;
-		if ( /^group_color:\s*(\w+)\s+allocation score on\s+(\w+):\s+(.*)$/ ) {
+		if ( /^group_color:\s*(\w+)\s+allocation score on\s+([a-zA-Z0-9_-]+):\s+(.*)$/ ) {
 			# printf "DBG: group 1: %s, 2: %s, 3: %s\n", $1, $2, $3;
 			$resource{$1}->{nodes}->{$2}->{gc}=$3;
 			push(@{$resource{$1}->{priorities}->{$3}}, $2);
 		}
-		if ( /^native_color:\s*(\w+)\s+allocation score on\s+(\w+):\s+(.*)$/ ) {
+		if ( /^native_color:\s*(\w+)\s+allocation score on\s+([a-zA-Z0-9_-]+):\s+(.*)$/ ) {
 			# printf "DBG: native 1: %s, 2: %s, 3: %s\n", $1, $2, $3;
 			$resource{$1}->{nodes}->{$2}->{nc}=$3;
 			push(@{$resource{$1}->{priorities}->{$3}}, $2);
