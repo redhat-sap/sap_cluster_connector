@@ -190,8 +190,8 @@ sub check_pending_action {
 		} elsif ( ${act} eq "start" ) {
                         $masteract="promote";
                 }
-		#if ( $line =~ /(${res}(:[0-9]+)?_(${act}|${masteract})_0.*: ${sta})/ ) {
-		if ( $line =~ /(${res}(:[0-9]+)?_(${act}|demote|promote)_0.*: ${sta})/ ) {
+		#if ( $line =~ /(${res}(:[0-9]+)?_(${act}|${masteract})_0.*: ${sta})/i ) {
+		if ( $line =~ /(${res}(:[0-9]+)?_(${act}|demote|promote)_0.*: ${sta})/i ) {
 			$rc=0;
 			syslog("LOG_INFO","Pending action %s for %s found", $1, ${res});
 			#printf "<---- FOUND!!";
