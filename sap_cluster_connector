@@ -296,18 +296,18 @@ sub get_resource_from_sid_ino {
 
 }
 
-sub check_maintanance_mode {
+sub check_maintenance_mode {
 	my ($res) = @_;
 	my $retcode;
 	$nowstring = localtime;
 	printf "%s : check_maintenance_mode($res)\n", $nowstring;
 
-	my $retcode = system("$cmd_crm_resource | grep -E \"\[\[:space:\]\]$res\[\[:space:\]\]\" | grep -q unmanaged");
+	my $retcode = system("$cmd_crm_resource | grep -E \"\[\[:space:\]\]$res\[\[:space:\]\]\" | grep -E -q \"maintenance|unmanaged\"");
 	$retcode=$retcode >> 8;
 	if ( $retcode eq "0" ) {
-		syslog("LOG_INFO", "resource %s is in maintanance mode\n", $res);
+		syslog("LOG_INFO", "resource %s is in maintenance mode\n", $res);
 	} else {
-		syslog("LOG_INFO", "resource %s is not in maintanance mode\n", $res);
+		syslog("LOG_INFO", "resource %s is not in maintenance mode\n", $res);
 	}
 	return $retcode;
 }
@@ -327,7 +327,7 @@ sub list_sap_resources {
 
 	if ($fname ne "") {
 
-		my $status = check_maintanance_mode($fname);
+		my $status = check_maintenance_mode($fname);
         	syslog("LOG_INFO", "check_maintenance_mode call (retcode=%s)", $status); 
 
 		if ( $status eq "0" ) {
@@ -539,7 +539,7 @@ sub set_maintenance_mode {
 
 	if ($res ne "") {
 
-		my $status = check_maintanance_mode($res);
+		my $status = check_maintenance_mode($res);
 		if ( $status eq "0" ) {
 			# maintenance mode is active for resource
 			$mm=1;
